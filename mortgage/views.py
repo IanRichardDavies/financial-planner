@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def mortgage_home(request):
+    return render(request, 'mortgage_home.html')
