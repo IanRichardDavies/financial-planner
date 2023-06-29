@@ -126,8 +126,164 @@ class Mortgage(Debt):
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
         self.term_end_date = start_date + relativedelta(years=term)
 
-
     # TODO: create properties
+    @property
+    def principal(self):
+        return self._principal
+    
+    @property.setter
+    def principal(self, principal):
+        """Check for valid principal amount."""
+        if isinstance(principal, str):
+            if not principal.isdigit():
+                raise ValueError(
+                    "Invalid principal - please set the value between 0 and 10,000,000."
+                )
+            else:
+                principal = int(principal)
+        elif not isinstance(principal, (int, float)):
+            raise ValueError(
+                    "Invalid principal - please set the value between 0 and 10,000,000."
+                )
+        if 1 <= principal <= 10_000_000:
+            self._principal = int(principal)
+        else:
+            raise ValueError(
+                "Invalid principal - please set the value between 0 and 10,000,000."
+            )
+        
+    @property
+    def interest_rate(self):
+        return self._interest_rate
+    
+    @property.setter
+    def interest_rate(self, interest_rate):
+        """Check for valid interest_rate."""
+        if isinstance(interest_rate, str):
+            if not interest_rate.isnumeric():
+                raise ValueError(
+                    "Invalid interest_rate - please set the value between 0 and 0.25"
+                )
+            else:
+                interest_rate = float(interest_rate)
+        if isinstance(interest_rate, (int, float)):
+            if interest_rate >= 1.0:
+                interest_rate /= 100
+            if 0.0 <= interest_rate <= 0.25:
+                self._interest_rate = interest_rate
+        else:
+            raise ValueError(
+                "Invalid interest_rate - please set the value between 0 and 0.25"
+            )
+        
+    @property
+    def term(self):
+        return self._term
+    
+    @property.setter
+    def term(self, term):
+        """Check for valid mortgage term."""
+        if isinstance(term, str):
+            if not term.isdigit():
+                raise ValueError(
+                    "Invalid term - please choose a mortgage term between 1 and 30."
+                )
+            else:
+                term = int(term)
+        elif not isinstance(term, (int, float)):
+            raise ValueError(
+                    "Invalid term - please choose a mortgage term between 1 and 30."
+                )
+        if 1 <= term <= 30:
+            self._term = int(term)
+        else:
+            raise ValueError(
+                "Invalid term - please choose a mortgage term between 1 and 30."
+            )
+        
+    @property
+    def start_date(self):
+        return self._start_date
+    
+    @property.setter
+    def start_date(self, start_date):
+        """Check for valid start date."""
+        if isinstance(start_date, datetime):
+            self._start_date = start_date
+        elif isinstance(start_date, str):
+            try:
+                self._start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            except ValueError:
+                raise ValueError(
+                    "Invalid start_date - please choose a valid date in YYYY-MM-DD format."
+                )
+        else:
+            raise ValueError(
+                "Invalid start_date - please choose a valid date in YYYY-MM-DD format."
+            )
+
+    @property
+    def prepayment_per_period(self):
+        return self._prepayment_per_period
+    
+    @property.setter
+    def prepayment_per_period(self, prepayment_per_period):
+        """Check for valid prepayment_per_period."""
+        if isinstance(prepayment_per_period, str):
+            if not prepayment_per_period.isdigit():
+                raise ValueError(
+                    "Invalid prepayment_per_period - please an integer between 0 and 20,000."
+                )
+            else:
+                prepayment_per_period = int(prepayment_per_period)
+        elif not isinstance(prepayment_per_period, (int, float)):
+            raise ValueError(
+                    "Invalid prepayment_per_period - please an integer between 0 and 20,000."
+                )
+        if 0.0 <= prepayment_per_period <= 20000:
+            self._prepayment_per_period = int(prepayment_per_period)
+        else:
+            raise ValueError(
+                "Invalid prepayment_per_period - please an integer between 0 and 20,000."
+            )
+
+    @property
+    def product(self):
+        return self._product
+    
+    @property.setter
+    def product(self, product):
+        """Check for valid product type."""
+        if product.strip().lower() in ["fixed", "variable",]:
+            self._product = product.strip().lower()
+        else:
+            raise ValueError(
+                "Invalid product - please choose between 'variable' and 'fixed'."
+            )
+    @property
+    def payments_per_year(self):
+        return self._payments_per_year
+
+    @property.setter
+    def payments_per_year(self, term):
+        """Check for valid number of payments per year."""
+        if isinstance(payments_per_year, str):
+            if not payments_per_year.isdigit():
+                raise ValueError(
+                    "Invalid payments_per_year - please choose from (1, 26, 52)."
+                )
+            else:
+                payments_per_year = int(payments_per_year)
+        elif not isinstance(payments_per_year, (int, float)):
+            raise ValueError(
+                    "Invalid payments_per_year - please choose from (1, 26, 52)."
+                )
+        if payments_per_year in [12, 26, 52]:
+            self._payments_per_year = int(payments_per_year)
+        else:
+            raise ValueError(
+                "Invalid payments_per_year - please choose from (1, 26, 52)."
+            )
 
     def calculate_payment(self) -> None:
         self.payment = -npf.pmt(self.period_rate, self.num_periods, self.current_balance)
