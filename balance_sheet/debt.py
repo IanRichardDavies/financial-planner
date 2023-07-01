@@ -115,23 +115,18 @@ class Mortgage(Debt):
         self.period_rate = interest_rate / payments_per_year
         self.num_periods = amortization * payments_per_year
         self.current_period = 1
-        self.current_balance = principal
-        self.payment = -npf.pmt(
-            interest_rate / payments_per_year,
-            amortization * payments_per_year,
-            principal,
-        )
-        self.amortization_table: pd.DataFrame = None
+        self.current_balance = self.principal
         if isinstance(start_date, str):
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
         self.term_end_date = start_date + relativedelta(years=term)
+        self.calculate_payment()
+        self.create_amortization_table()
 
-    # TODO: create properties
     @property
     def principal(self):
         return self._principal
     
-    @property.setter
+    @principal.setter
     def principal(self, principal):
         """Check for valid principal amount."""
         if isinstance(principal, str):
@@ -156,7 +151,7 @@ class Mortgage(Debt):
     def interest_rate(self):
         return self._interest_rate
     
-    @property.setter
+    @interest_rate.setter
     def interest_rate(self, interest_rate):
         """Check for valid interest_rate."""
         if isinstance(interest_rate, str):
@@ -171,6 +166,10 @@ class Mortgage(Debt):
                 interest_rate /= 100
             if 0.0 <= interest_rate <= 0.25:
                 self._interest_rate = interest_rate
+            else:
+                raise ValueError(
+                    "Invalid interest_rate - please set the value between 0 and 0.25"
+                )
         else:
             raise ValueError(
                 "Invalid interest_rate - please set the value between 0 and 0.25"
@@ -180,7 +179,7 @@ class Mortgage(Debt):
     def term(self):
         return self._term
     
-    @property.setter
+    @term.setter
     def term(self, term):
         """Check for valid mortgage term."""
         if isinstance(term, str):
@@ -202,10 +201,35 @@ class Mortgage(Debt):
             )
         
     @property
+    def amortization(self):
+        return self._amortization
+    
+    @amortization.setter
+    def amortization(self, amortization):
+        """Check for valid amortization term."""
+        if isinstance(amortization, str):
+            if not amortization.isdigit():
+                raise ValueError(
+                    "Invalid amortization - please choose a amortization period between 1 and 30."
+                )
+            else:
+                amortization = int(amortization)
+        elif not isinstance(amortization, (int, float)):
+            raise ValueError(
+                    "Invalid amortization - please choose a amortization period between 1 and 30."
+                )
+        if 1 <= amortization <= 30:
+            self._amortization = int(amortization)
+        else:
+            raise ValueError(
+                "Invalid amortization - please choose a amortization period between 1 and 30."
+            )
+        
+    @property
     def start_date(self):
         return self._start_date
     
-    @property.setter
+    @start_date.setter
     def start_date(self, start_date):
         """Check for valid start date."""
         if isinstance(start_date, datetime):
@@ -226,7 +250,7 @@ class Mortgage(Debt):
     def prepayment_per_period(self):
         return self._prepayment_per_period
     
-    @property.setter
+    @prepayment_per_period.setter
     def prepayment_per_period(self, prepayment_per_period):
         """Check for valid prepayment_per_period."""
         if isinstance(prepayment_per_period, str):
@@ -251,7 +275,7 @@ class Mortgage(Debt):
     def product(self):
         return self._product
     
-    @property.setter
+    @product.setter
     def product(self, product):
         """Check for valid product type."""
         if product.strip().lower() in ["fixed", "variable",]:
@@ -264,8 +288,8 @@ class Mortgage(Debt):
     def payments_per_year(self):
         return self._payments_per_year
 
-    @property.setter
-    def payments_per_year(self, term):
+    @payments_per_year.setter
+    def payments_per_year(self, payments_per_year):
         """Check for valid number of payments per year."""
         if isinstance(payments_per_year, str):
             if not payments_per_year.isdigit():
