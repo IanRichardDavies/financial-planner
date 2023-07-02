@@ -72,3 +72,28 @@ class MortgageTestCase(TestCase):
             with self.assertRaises(ValueError):
                 mortgage = Mortgage(**test)
 
+    def test_invalid_payments_per_years(self):
+        test = self.valid[0].copy()
+        for arg in [-10, 10, 35,]:
+            test["payments_per_year"] = arg
+            with self.assertRaises(ValueError):
+                mortgage = Mortgage(**test)
+
+    def test_calculate_num_payments_dates(self):
+        test = self.valid[0].copy()
+        for arg in [12, 26, 52,]:
+            test["payments_per_year"] = arg
+            mortgage = Mortgage(**test)
+            test_stat =  mortgage._calculate_num_periods_between_dates(
+                start_date = "2022-01-01",
+                end_date = "2023-01-5",
+            )
+            assert test_stat == arg
+
+    def test_create_amortization_table(self):
+        test = self.valid[0].copy()
+        mortgage = Mortgage(**test)
+        assert mortgage.amortization_table.shape == (300, 6)
+        assert mortgage.amortization_table["balance"].iloc[0] < test["principal"]
+        assert abs(mortgage.amortization_table["balance"].iloc[-1]) < 1
+        assert mortgage.amortization_table["payment"].nunique() == 1

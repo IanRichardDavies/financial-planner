@@ -294,19 +294,19 @@ class Mortgage(Debt):
         if isinstance(payments_per_year, str):
             if not payments_per_year.isdigit():
                 raise ValueError(
-                    "Invalid payments_per_year - please choose from (1, 26, 52)."
+                    "Invalid payments_per_year - please choose from (12, 26, 52)."
                 )
             else:
                 payments_per_year = int(payments_per_year)
         elif not isinstance(payments_per_year, (int, float)):
             raise ValueError(
-                    "Invalid payments_per_year - please choose from (1, 26, 52)."
+                    "Invalid payments_per_year - please choose from (12, 26, 52)."
                 )
         if payments_per_year in [12, 26, 52]:
             self._payments_per_year = int(payments_per_year)
         else:
             raise ValueError(
-                "Invalid payments_per_year - please choose from (1, 26, 52)."
+                "Invalid payments_per_year - please choose from (12, 26, 52)."
             )
 
     def calculate_payment(self) -> None:
@@ -352,7 +352,13 @@ class Mortgage(Debt):
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
         if isinstance(end_date, str):
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        return math.floor((end_date - start_date).months / 12)
+        diff = relativedelta(end_date, start_date)
+        if self.payments_per_year == 12:
+            return math.floor(diff.months + diff.years * 12)
+        elif self.payments_per_year == 26:
+            return math.floor((diff.days / 7 + diff.years * 52) / 2)
+        else:
+            return math.floor(diff.days / 7 + diff.years * 52)
 
     def create_amortization_table(self) -> None:
         """Create an amortization table using object attributes at init."""
