@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mortgage',
     'plan',
+    'balance_sheet',
 ]
 
 MIDDLEWARE = [
