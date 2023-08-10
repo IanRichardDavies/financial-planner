@@ -29,10 +29,10 @@ class Debt(ABC):
         """Abstract method to calculate required payment."""
         raise NotImplementedError
     
-    @abstractmethod
-    def calculate_current_balance(self) -> None:
-        """Abstract method to calculate current balance outstanding."""
-        raise NotImplementedError
+    # @abstractmethod
+    # def calculate_current_balance(self) -> None:
+    #     """Abstract method to calculate current balance outstanding."""
+    #     raise NotImplementedError
     
 
 class PersonalDebt(Debt):
@@ -338,10 +338,10 @@ class Mortgage(Debt):
             current_balance,
         )
 
-    def calculate_current_balance(self, principal_payment: Union[float, int]) -> None:
-        """Calculate the current oustanding balance after a payment."""
-        # TODO: is this method necessary?
-        self.current_balance -= principal_payment
+    # def calculate_current_balance(self, principal_payment: Union[float, int]) -> None:
+    #     """Calculate the current oustanding balance after a payment."""
+    #     # TODO: is this method necessary?
+    #     self.current_balance -= principal_payment
 
     def _calculate_num_periods_between_dates(self,
         start_date: Union[str, datetime],
@@ -389,14 +389,40 @@ class Mortgage(Debt):
     def make_lumpsum_payment(
         self,
         payment: Union[float, int],
-        date: Union[str, datetime],
+        payment_num: Union[str, int],
     ) -> None:
-        # TODO - needs to update the balance at the appropriate period, then recalculate amort table
-        pass
+        """Make a lumpsum payment and recalculate amortization table."""
+        if self.amortization_table['payment_num'].min() <= payment_num <= self.amortization_table['payment_num'].max():
+            self.amortization_table.loc[self.amortization_table['payment_num'] == payment_num, 'payment'] += payment
+            self.amortization_table.loc[self.amortization_table['payment_num'] == payment_num, 'balance'] -= payment
+            self.amortization_table.loc[self.amortization_table['payment_num'] == payment_num, 'principal_portion'] += payment
+            self._recalculate_amortization_table(payment_num)
+        else:
+            raise ValueError(
+                f"Invalid payment_num - please choose between {self.amortization_table['payment_num'].min()} "
+                f"and {self.amortization_table['payment_num'].max()}, inclusive."
+            )
 
-    def _recalculate_amortization_table(self) -> None:
-        # TODO
-        pass
+    def _recalculate_amortization_table(self, payment_num: Union[str, int],) -> None:
+        """Recalculate amortization table once lumpsum payment occurs."""
+        interest_portion = self.amortization_table["interest_portion"].values
+        principal_portion = self.amortization_table["principal_portion"].values
+        balance = self.amortization_table["balance"].values
+        payment = self.amortization_table["payment"].values
+        for i in range(payment_num, self.num_periods):
+            interest_portion[i] = self._calculate_interest_portion(i+1, balance[i])
+            principal_portion[i] = payment[i] - interest_portion[i]
+            if principal_portion[i] <= balance[i-1]:
+                balance[i] = balance[i-1] - principal_portion[i]
+            else:
+                balance[i] = 0
+                payment[i] -= (principal_portion[i] - balance[i-1])
+                principal_portion[i] = balance[i-1]
+                break 
+        self.amortization_table = self.amortization_table.iloc[:i+1,:] 
+        self.amortization_table["balance"] = balance[:i+1]
+        self.amortization_table["interest_portion"] = interest_portion[:i+1]
+        self.amortization_table["principal_portion"] = principal_portion[:i+1]
 
     def renew_mortgage(
         self,
