@@ -29,11 +29,6 @@ class Debt(ABC):
         """Abstract method to calculate required payment."""
         raise NotImplementedError
     
-    # @abstractmethod
-    # def calculate_current_balance(self) -> None:
-    #     """Abstract method to calculate current balance outstanding."""
-    #     raise NotImplementedError
-    
 
 class PersonalDebt(Debt):
     """Class representing non-mortgage debt"""
@@ -338,11 +333,6 @@ class Mortgage(Debt):
             current_balance,
         )
 
-    # def calculate_current_balance(self, principal_payment: Union[float, int]) -> None:
-    #     """Calculate the current oustanding balance after a payment."""
-    #     # TODO: is this method necessary?
-    #     self.current_balance -= principal_payment
-
     def _calculate_num_periods_between_dates(self,
         start_date: Union[str, datetime],
         end_date: Union[str, datetime],
@@ -431,7 +421,14 @@ class Mortgage(Debt):
         interest_rate: float,
         type: str,
         amortization_period: int,
-        start_date: Union[str, datetime],
     ) -> None:
-        # TODO
+        """
+        renewal date should be attribute of mortgage
+        at renewal, the following is reset
+        - term
+        - amortization
+        - interest
+        - balance
+        amortization table is recreated
+        """
         pass
