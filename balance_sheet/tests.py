@@ -97,3 +97,11 @@ class MortgageTestCase(TestCase):
         assert mortgage.amortization_table["balance"].iloc[0] < test["principal"]
         assert abs(mortgage.amortization_table["balance"].iloc[-1]) < 1
         assert mortgage.amortization_table["payment"].nunique() == 1
+
+    def test_recalculate_amortization_table(self):
+        test = self.valid[0].copy()
+        mortgage = Mortgage(**test)
+        assert mortgage.amortization_table.shape == (300, 6)
+        mortgage.make_lumpsum_payment(50_000, payment_num=10)
+        assert mortgage.amortization_table.shape[0] < 300
+        assert abs(mortgage.amortization_table["balance"].iloc[-1]) < 1
